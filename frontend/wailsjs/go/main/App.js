@@ -34,6 +34,14 @@ export function GetDataDir() {
   return window['go']['main']['App']['GetDataDir']();
 }
 
+export function GetDirectMailConfigs() {
+  return window['go']['main']['App']['GetDirectMailConfigs']();
+}
+
+export function GetDuckDuckGoConfigs() {
+  return window['go']['main']['App']['GetDuckDuckGoConfigs']();
+}
+
 export function GetLicenseInfo() {
   return window['go']['main']['App']['GetLicenseInfo']();
 }
@@ -66,6 +74,10 @@ export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }
 
+export function GetTEmailConfigs() {
+  return window['go']['main']['App']['GetTEmailConfigs']();
+}
+
 export function GetTaskStatus() {
   return window['go']['main']['App']['GetTaskStatus']();
 }
@@ -94,8 +106,20 @@ export function ResetResultOutputDir() {
   return window['go']['main']['App']['ResetResultOutputDir']();
 }
 
+export function SaveDirectMailConfigs(arg1) {
+  return window['go']['main']['App']['SaveDirectMailConfigs'](arg1);
+}
+
+export function SaveDuckDuckGoConfigs(arg1) {
+  return window['go']['main']['App']['SaveDuckDuckGoConfigs'](arg1);
+}
+
 export function SaveMoeMailConfigs(arg1) {
   return window['go']['main']['App']['SaveMoeMailConfigs'](arg1);
+}
+
+export function SaveTEmailConfigs(arg1) {
+  return window['go']['main']['App']['SaveTEmailConfigs'](arg1);
 }
 
 export function SelectDirectory() {
@@ -126,8 +150,20 @@ export function StopTask() {
   return window['go']['main']['App']['StopTask']();
 }
 
+export function TestDirectMailConnection(arg1) {
+  return window['go']['main']['App']['TestDirectMailConnection'](arg1);
+}
+
+export function TestDuckDuckGoConnection(arg1) {
+  return window['go']['main']['App']['TestDuckDuckGoConnection'](arg1);
+}
+
 export function TestMoeMailConnection(arg1) {
   return window['go']['main']['App']['TestMoeMailConnection'](arg1);
+}
+
+export function TestTEmailConnection(arg1) {
+  return window['go']['main']['App']['TestTEmailConnection'](arg1);
 }
 
 export function VerifyLicense(arg1) {

@@ -166,6 +166,48 @@ func (a *App) TestMoeMailConnection(configJSON string) map[string]interface{} {
 	return email.TestMoeMailConnection(configJSON)
 }
 
+// ---- DuckDuckGo ----
+
+func (a *App) GetDuckDuckGoConfigs() []email.DuckDuckGoConfig {
+	return email.GetDuckDuckGoConfigs()
+}
+
+func (a *App) SaveDuckDuckGoConfigs(configsJSON string) map[string]interface{} {
+	return email.SaveDuckDuckGoConfigs(configsJSON)
+}
+
+func (a *App) TestDuckDuckGoConnection(token string) map[string]interface{} {
+	return email.TestDuckDuckGoConnection(token)
+}
+
+// ---- TEmail ----
+
+func (a *App) GetTEmailConfigs() []email.TEmailConfig {
+	return email.GetTEmailConfigs()
+}
+
+func (a *App) SaveTEmailConfigs(configsJSON string) map[string]interface{} {
+	return email.SaveTEmailConfigs(configsJSON)
+}
+
+func (a *App) TestTEmailConnection(configJSON string) map[string]interface{} {
+	return email.TestTEmailConnection(configJSON)
+}
+
+// ---- DirectMail ----
+
+func (a *App) GetDirectMailConfigs() []email.DirectMailConfig {
+	return email.GetDirectMailConfigs()
+}
+
+func (a *App) SaveDirectMailConfigs(configsJSON string) map[string]interface{} {
+	return email.SaveDirectMailConfigs(configsJSON)
+}
+
+func (a *App) TestDirectMailConnection(configJSON string) map[string]interface{} {
+	return email.TestDirectMailConnection(configJSON)
+}
+
 // ---- Outlook ----
 
 func (a *App) AddOutlookAccounts(data string) map[string]interface{} {

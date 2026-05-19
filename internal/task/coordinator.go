@@ -22,10 +22,14 @@ type StartTaskRequest struct {
 	Concurrency       int                              `json:"concurrency"`
 	Delay             int                              `json:"delay"`
 	OutputPath        string                           `json:"outputPath"`
-	EmailProvider     string                           `json:"emailProvider"`     // "outlook" 或 "moemail"
+	EmailProvider     string                           `json:"emailProvider"`     // "outlook" / "moemail" / "duck-temail" / "directmail"
 	MoeMailDomains    []string                         `json:"moemailDomains"`    // 选中的域名列表
 	MoeMailConfigs    map[string][]email.MoeMailConfig `json:"moemailConfigs"`    // 域名 -> 配置列表映射
 	MoeMailRandomMode bool                             `json:"moemailRandomMode"` // 是否为随机模式
+
+	DuckTokens     []string             `json:"duckTokens"`     // DuckDuckGo Token 池 (轮换)
+	TEmailConfigs  []email.TEmailConfig `json:"temailConfigs"`  // TEmail 配置池
+	DirectMailCfgs []email.DirectMailConfig `json:"directMailConfigs"` // DirectMail 配置池
 }
 
 // StartTask 公开方法（包装器）
@@ -59,7 +63,41 @@ func startTask(req StartTaskRequest) map[string]interface{} {
 			Manager.mu.Unlock()
 			return map[string]interface{}{"error": "MoeMail 配置缺失"}
 		}
-		// MoeMail 不需要预先加载账号，每次任务动态生成
+	} else if emailProvider == "duck-temail" {
+		duckTokens := req.DuckTokens
+		if len(duckTokens) == 0 {
+			for _, c := range email.GetDuckDuckGoConfigs() {
+				if c.Token != "" {
+					duckTokens = append(duckTokens, c.Token)
+				}
+			}
+		}
+		if len(duckTokens) == 0 {
+			Manager.mu.Unlock()
+			return map[string]interface{}{"error": "请先配置 DuckDuckGo Token"}
+		}
+		req.DuckTokens = duckTokens
+		if len(req.TEmailConfigs) == 0 {
+			req.TEmailConfigs = email.GetTEmailConfigs()
+		}
+		if len(req.TEmailConfigs) == 0 {
+			Manager.mu.Unlock()
+			return map[string]interface{}{"error": "请先配置 TEmail"}
+		}
+	} else if emailProvider == "directmail" {
+		if len(req.DirectMailCfgs) == 0 {
+			req.DirectMailCfgs = email.GetDirectMailConfigs()
+		}
+		if len(req.DirectMailCfgs) == 0 {
+			Manager.mu.Unlock()
+			return map[string]interface{}{"error": "请先配置 DirectMail"}
+		}
+		if len(req.DirectMailCfgs) < req.Count {
+			Manager.mu.Unlock()
+			return map[string]interface{}{
+				"error": fmt.Sprintf("DirectMail 配置不足: 需要 %d, 仅有 %d (每个邮箱只能注册一次)", req.Count, len(req.DirectMailCfgs)),
+			}
+		}
 	} else {
 		// Outlook 模式：加载账号列表
 		storedAccounts := storage.GetAccountsCached()
@@ -195,6 +233,10 @@ func runBatch(req StartTaskRequest, emailProvider string, outlookAccounts []emai
 		log.Printf("[Kiro] MoeMail 域名池: %v (共 %d 个域名)", moemailDomainPool, len(moemailDomainPool))
 	} else if emailProvider == "outlook" {
 		taskConfig.UseOutlook = true
+	} else if emailProvider == "duck-temail" {
+		log.Printf("[Kiro] DuckDuckGo+TEmail 模式: %d 个 Token, %d 个 TEmail 配置", len(req.DuckTokens), len(req.TEmailConfigs))
+	} else if emailProvider == "directmail" {
+		log.Printf("[Kiro] DirectMail 模式: %d 个配置", len(req.DirectMailCfgs))
 	}
 
 	// 统计计数器
@@ -289,6 +331,18 @@ func runBatch(req StartTaskRequest, emailProvider string, outlookAccounts []emai
 
 			taskCfg.MoeMailProvider = provider
 			currentEmail = provider.GetAddress()
+		} else if emailProvider == "duck-temail" {
+			// DuckDuckGo + TEmail 模式: 轮换 Token 和 TEmail 配置
+			duckToken := req.DuckTokens[i%len(req.DuckTokens)]
+			temailCfg := req.TEmailConfigs[i%len(req.TEmailConfigs)]
+			taskCfg.DuckToken = duckToken
+			taskCfg.TEmailConfig = &temailCfg
+			currentEmail = "(DuckDuckGo 别名)"
+		} else if emailProvider == "directmail" {
+			// DirectMail 模式: 每个任务使用不同的配置
+			dmCfg := req.DirectMailCfgs[i%len(req.DirectMailCfgs)]
+			taskCfg.DirectMail = &dmCfg
+			currentEmail = dmCfg.Email
 		}
 
 		log.Printf("[Kiro][%d/%d] 开始注册", i+1, req.Count)

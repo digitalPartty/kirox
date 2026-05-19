@@ -264,6 +264,11 @@ function getFormConfig() {
       });
       config.moemailRandomMode = false;
     }
+  } else if (config.emailProvider === 'duck-temail') {
+    config.duckTokens = (duckConfigs || []).map(c => c.token);
+    config.temailConfigs = temailConfigs || [];
+  } else if (config.emailProvider === 'directmail') {
+    config.directMailConfigs = directMailConfigs || [];
   }
 
   return config;

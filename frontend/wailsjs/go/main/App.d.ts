@@ -19,6 +19,10 @@ export function DownloadUpdate():Promise<Record<string, any>>;
 
 export function GetDataDir():Promise<string>;
 
+export function GetDirectMailConfigs():Promise<Array<email.DirectMailConfig>>;
+
+export function GetDuckDuckGoConfigs():Promise<Array<email.DuckDuckGoConfig>>;
+
 export function GetLicenseInfo():Promise<Record<string, any>>;
 
 export function GetLogs():Promise<Array<string>>;
@@ -35,6 +39,8 @@ export function GetResultOutputDir():Promise<string>;
 
 export function GetStatus():Promise<Record<string, any>>;
 
+export function GetTEmailConfigs():Promise<Array<email.TEmailConfig>>;
+
 export function GetTaskStatus():Promise<Record<string, any>>;
 
 export function ImportOutlookFile(arg1:string):Promise<Record<string, any>>;
@@ -49,7 +55,13 @@ export function ResetProxy():Promise<Record<string, any>>;
 
 export function ResetResultOutputDir():Promise<Record<string, any>>;
 
+export function SaveDirectMailConfigs(arg1:string):Promise<Record<string, any>>;
+
+export function SaveDuckDuckGoConfigs(arg1:string):Promise<Record<string, any>>;
+
 export function SaveMoeMailConfigs(arg1:string):Promise<Record<string, any>>;
+
+export function SaveTEmailConfigs(arg1:string):Promise<Record<string, any>>;
 
 export function SelectDirectory():Promise<string>;
 
@@ -65,6 +77,12 @@ export function StartTask(arg1:task.StartTaskRequest):Promise<Record<string, any
 
 export function StopTask():Promise<Record<string, any>>;
 
+export function TestDirectMailConnection(arg1:string):Promise<Record<string, any>>;
+
+export function TestDuckDuckGoConnection(arg1:string):Promise<Record<string, any>>;
+
 export function TestMoeMailConnection(arg1:string):Promise<Record<string, any>>;
+
+export function TestTEmailConnection(arg1:string):Promise<Record<string, any>>;
 
 export function VerifyLicense(arg1:string):Promise<Record<string, any>>;

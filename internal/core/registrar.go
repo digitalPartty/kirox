@@ -287,7 +287,7 @@ func (r *Registrar) Step2Device() error {
 	return nil
 }
 
-// Step3Email 获取邮箱 (临时邮箱、Outlook)
+// Step3Email 获取邮箱 (Outlook / MoeMail / DuckTEmail / DirectMail)
 func (r *Registrar) Step3Email() error {
 	if r.Cfg.UseOutlook && r.Cfg.OutlookAccount != nil {
 		log.Println("[3] 使用 Outlook 邮箱")
@@ -295,8 +295,27 @@ func (r *Registrar) Step3Email() error {
 		log.Printf("email=%s", r.Email)
 		return nil
 	}
-	log.Println("[3] 创建临时邮箱")
-	// 如果未配置 MoEmail URL，从已保存的 MoeMail 配置中自动读取
+
+	if r.Cfg.DuckToken != "" && r.Cfg.TEmailConfig != nil {
+		log.Println("[3] 创建 DuckDuckGo 别名 (TEmail 取码)")
+		r.EmailSvc = email.NewDuckTEmailService(r.Cfg.DuckToken, *r.Cfg.TEmailConfig)
+		r.Email = r.EmailSvc.Create()
+		if r.Email == "" {
+			return fmt.Errorf("DuckDuckGo 别名创建失败")
+		}
+		log.Printf("email=%s", r.Email)
+		return nil
+	}
+
+	if r.Cfg.DirectMail != nil {
+		log.Println("[3] 使用 DirectMail 邮箱")
+		r.EmailSvc = email.NewDirectMailService(*r.Cfg.DirectMail)
+		r.Email = r.EmailSvc.Create()
+		log.Printf("email=%s", r.Email)
+		return nil
+	}
+
+	log.Println("[3] 创建 MoeMail 临时邮箱")
 	baseURL := r.Cfg.MoEmailBaseURL
 	apiKey := r.Cfg.MoEmailAPIKey
 	if baseURL == "" {

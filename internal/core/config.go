@@ -36,6 +36,10 @@ type Config struct {
 
 	MoEmailBaseURL string
 	MoEmailAPIKey  string
+
+	DuckToken     string
+	TEmailConfig  *email.TEmailConfig
+	DirectMail    *email.DirectMailConfig
 }
 
 // NewConfig 创建默认配置

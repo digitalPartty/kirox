@@ -158,34 +158,72 @@ function initEmailProviderSelection() {
 function selectEmailProvider(provider) {
   selectedEmailProvider = provider;
 
-  // 更新按钮样式
-  const outlookBtn = document.querySelector('label[onclick*="outlook"]');
-  const moemailBtn = document.querySelector('label[onclick*="moemail"]');
+  // 更新所有按钮样式 (按 onclick attribute 选取,避免 'moemail' 子串误匹配)
+  const allBtns = document.querySelectorAll('label[onclick^="selectEmailProvider"]');
+  allBtns.forEach(btn => {
+    const m = btn.getAttribute('onclick').match(/selectEmailProvider\('([^']+)'\)/);
+    const btnProvider = m ? m[1] : '';
+    if (btnProvider === provider) {
+      btn.style.borderColor = 'var(--primary)';
+      btn.style.background = 'rgba(59, 130, 246, 0.1)';
+    } else {
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'transparent';
+    }
+  });
 
-  if (provider === 'outlook') {
-    outlookBtn.style.borderColor = 'var(--primary)';
-    outlookBtn.style.background = 'rgba(59, 130, 246, 0.1)';
-    moemailBtn.style.borderColor = 'var(--border)';
-    moemailBtn.style.background = 'transparent';
-  } else {
-    outlookBtn.style.borderColor = 'var(--border)';
-    outlookBtn.style.background = 'transparent';
-    moemailBtn.style.borderColor = 'var(--primary)';
-    moemailBtn.style.background = 'rgba(59, 130, 246, 0.1)';
-  }
-
-  // 显示/隐藏 MoeMail 配置选择
+  // 显示/隐藏 各类配置区
   const moemailConfigDiv = document.getElementById('moemail-config-select');
+  const duckTemailDiv = document.getElementById('duck-temail-config-select');
+  const directMailDiv = document.getElementById('directmail-config-select');
   const hintDiv = document.getElementById('email-provider-hint');
 
-  if (provider === 'moemail') {
-    moemailConfigDiv.style.display = 'block';
-    hintDiv.textContent = '使用 MoeMail 临时邮箱进行注册，每次任务会自动生成新邮箱。';
-    loadMoeMailDomainsToList();
-  } else {
-    moemailConfigDiv.style.display = 'none';
-    hintDiv.textContent = '使用微软邮箱进行注册，代理配置请在设置页设置。';
+  if (moemailConfigDiv) moemailConfigDiv.style.display = 'none';
+  if (duckTemailDiv) duckTemailDiv.style.display = 'none';
+  if (directMailDiv) directMailDiv.style.display = 'none';
+
+  switch (provider) {
+    case 'moemail':
+      if (moemailConfigDiv) moemailConfigDiv.style.display = 'block';
+      hintDiv.textContent = '使用 MoeMail 临时邮箱注册，每个任务会自动生成新邮箱。';
+      loadMoeMailDomainsToList();
+      break;
+    case 'duck-temail':
+      if (duckTemailDiv) duckTemailDiv.style.display = 'block';
+      hintDiv.textContent = 'DuckDuckGo 创建别名，邮件转发到 TEmail (PMail) 取验证码。请先在邮箱池页面配置 Token 与 TEmail。';
+      loadDuckTEmailSummary();
+      break;
+    case 'directmail':
+      if (directMailDiv) directMailDiv.style.display = 'block';
+      hintDiv.textContent = 'DirectMail 模式: 一个配置对应一个固定邮箱,只能注册一次。注册数量不能超过 DirectMail 配置数。';
+      loadDirectMailSummary();
+      break;
+    default:
+      hintDiv.textContent = '使用微软邮箱进行注册，代理配置请在设置页设置。';
   }
+}
+
+async function loadDuckTEmailSummary() {
+  try {
+    const ducks = await window.go.main.App.GetDuckDuckGoConfigs() || [];
+    const temails = await window.go.main.App.GetTEmailConfigs() || [];
+    const el = document.getElementById('duck-temail-summary');
+    if (el) {
+      el.innerHTML = `已配置 <b>${ducks.length}</b> 个 DuckDuckGo Token, <b>${temails.length}</b> 个 TEmail 配置`;
+      el.style.color = (ducks.length > 0 && temails.length > 0) ? 'var(--success)' : 'var(--danger)';
+    }
+  } catch(e) {}
+}
+
+async function loadDirectMailSummary() {
+  try {
+    const configs = await window.go.main.App.GetDirectMailConfigs() || [];
+    const el = document.getElementById('directmail-summary');
+    if (el) {
+      el.innerHTML = `已配置 <b>${configs.length}</b> 个 DirectMail 邮箱`;
+      el.style.color = configs.length > 0 ? 'var(--success)' : 'var(--danger)';
+    }
+  } catch(e) {}
 }
 
 // 加载 MoeMail 域名到列表
