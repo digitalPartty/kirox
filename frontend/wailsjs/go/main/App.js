@@ -22,8 +22,16 @@ export function ClearOutlookAccounts() {
   return window['go']['main']['App']['ClearOutlookAccounts']();
 }
 
+export function ClearRegisteredOutlookAccounts() {
+  return window['go']['main']['App']['ClearRegisteredOutlookAccounts']();
+}
+
 export function DeleteOutlookAccount(arg1) {
   return window['go']['main']['App']['DeleteOutlookAccount'](arg1);
+}
+
+export function DetectProxy(arg1) {
+  return window['go']['main']['App']['DetectProxy'](arg1);
 }
 
 export function DownloadUpdate() {
@@ -74,6 +82,14 @@ export function GetStatus() {
   return window['go']['main']['App']['GetStatus']();
 }
 
+export function GetSubscriptionLink(arg1, arg2) {
+  return window['go']['main']['App']['GetSubscriptionLink'](arg1, arg2);
+}
+
+export function GetSubscriptionPlans(arg1) {
+  return window['go']['main']['App']['GetSubscriptionPlans'](arg1);
+}
+
 export function GetTEmailConfigs() {
   return window['go']['main']['App']['GetTEmailConfigs']();
 }
@@ -84,6 +100,10 @@ export function GetTaskStatus() {
 
 export function ImportOutlookFile(arg1) {
   return window['go']['main']['App']['ImportOutlookFile'](arg1);
+}
+
+export function LoadOutputAccounts() {
+  return window['go']['main']['App']['LoadOutputAccounts']();
 }
 
 export function LogoutLicense() {

@@ -3,7 +3,7 @@
 var overviewTimer = null;
 var taskStatusTimer = null;
 
-// loadOverview 加载概览数据（含加密文件统计，3秒刷新）
+// loadOverview 加载概览数据（含账号池统计，3秒刷新）
 async function loadOverview() {
   if (!window.go || !window.go.main || !window.go.main.App) return;
   try {

@@ -4,6 +4,23 @@
 
 ---
 
+---
+
+## [v1.0.2] - 2026-05-18
+
+新增
+- 订阅页面：读取输出目录的账号，弹窗选择订阅计划后批量获取 Kiro 0 刀试用 / 支付链接
+  - 失败状态可点击展开「上游响应详情」模态框，完整查看 HTTP 状态码与响应体
+  - 自动识别封号（HTTP 403 / 423 / temporarily suspended / locked your account 等特征），从 `accounts.json` 删除并在前端列表同步移除 + Toast 通知
+- 代理保存后自动检测：通过 ip-api.com 中文接口展示出口 IP、协议、国家/地区/城市、ISP，结果以卡片形式显示在代理输入框下方
+- 微软邮箱池新增「清除已注册」按钮，仅删除标记为已注册的账号（成功/失败均算）
+- Outlook IMAP 取验证码 / OAuth 刷新 token 现在走全局代理（支持 http/https/socks5），代理端口被封时自动降级直连
+
+变更
+- 默认结果输出目录改为 `~/Documents/Kirox`，避免 macOS `/Applications/` 等只读位置的权限问题
+- 修正文案：Outlook 账号池等内部数据为本地 JSON 存储（此前误称"加密存储"）
+- README 新增「常见问题」章节，覆盖 IP 纯净度（OTP 400）与 macOS 损坏提示（`xattr -cr`）；新增 Star History
+
 ## [v1.0.1] - 2026-05-17
 
 完整 15 步 AWS Builder ID 自动注册（OIDC → 设备授权 → 邮箱验证 → 密码设置 → SSO → Kiro Token 交换）

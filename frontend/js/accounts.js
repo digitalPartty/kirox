@@ -148,7 +148,43 @@ function clearAllOutlookAccounts() {
   });
 }
 
+function clearRegisteredOutlookAccounts() {
+  var registered = outlookAllAccounts.filter(function(a) { return a.registered; }).length;
+  if (!registered) {
+    showToast('没有已注册的账号');
+    return;
+  }
+  showConfirmModal('清除已注册', '确认删除 ' + registered + ' 个已注册（成功/失败）的账号？', '确认删除', async function() {
+    try {
+      var result = await window.go.main.App.ClearRegisteredOutlookAccounts();
+      if (result.error) {
+        showToast(result.error, 'error');
+        return;
+      }
+      showToast('已删除 ' + (result.removed || 0) + ' 个账号');
+      await loadOutlookAccountsList();
+    } catch(e) {
+      showToast('删除失败: ' + e.message, 'error');
+    }
+  });
+}
+
 function openOutlookModal() {
   switchPage('accounts');
   loadOutlookAccountsList();
+}
+
+// ===== 自动刷新（停留在邮箱池页时每 3 秒刷新状态） =====
+var outlookRefreshTimer = null;
+
+function startOutlookAutoRefresh() {
+  stopOutlookAutoRefresh();
+  outlookRefreshTimer = setInterval(loadOutlookAccountsList, 3000);
+}
+
+function stopOutlookAutoRefresh() {
+  if (outlookRefreshTimer) {
+    clearInterval(outlookRefreshTimer);
+    outlookRefreshTimer = null;
+  }
 }

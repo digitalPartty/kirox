@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M10 8v16M10 16l8-8M10 16l8 8' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
-<title>Kiro 注册机</title>
+<title>KiroX</title>
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/style.css">
@@ -77,19 +77,19 @@
         <path d="M10 8v16M10 16l8-8M10 16l8 8" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <div class="skeleton-text">Kiro 注册机</div>
+    <div class="skeleton-text">KiroX</div>
     <div class="skeleton-spinner"></div>
   </div>
 </div>
 
 <!-- 更新提示模态框 -->
 <div id="update-modal" class="modal-overlay">
-  <div style="width:100%;max-width:500px;padding:24px;">
-    <div class="card" style="padding:32px;">
-      <div style="text-align:center;margin-bottom:24px;--wails-draggable:drag;cursor:move;">
+  <div style="width:100%;max-width:500px;padding:24px;max-height:90vh;display:flex;">
+    <div class="card" style="padding:32px;display:flex;flex-direction:column;min-height:0;flex:1;">
+      <div style="text-align:center;margin-bottom:24px;--wails-draggable:drag;cursor:move;flex-shrink:0;">
         <div style="font-size:18px;font-weight:700;color:var(--accent);">发现新版本</div>
       </div>
-      <div style="margin-bottom:24px;--wails-draggable:no-drag;">
+      <div style="margin-bottom:16px;--wails-draggable:no-drag;flex-shrink:0;">
         <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
           <span style="color:var(--text-secondary);">当前版本</span>
           <span id="update-current-version" style="font-family:var(--font-mono);font-weight:600;">-</span>
@@ -98,23 +98,18 @@
           <span style="color:var(--text-secondary);">最新版本</span>
           <span id="update-latest-version" style="font-family:var(--font-mono);font-weight:600;color:var(--accent);">-</span>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;">
           <span style="color:var(--text-secondary);">发布日期</span>
           <span id="update-release-date" style="font-family:var(--font-mono);font-weight:600;">-</span>
         </div>
       </div>
-      <div style="margin-bottom:24px;padding:16px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);--wails-draggable:no-drag;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">更新内容</div>
-        <div id="update-changelog" style="font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;">-</div>
+      <div style="margin-bottom:20px;padding:16px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius);--wails-draggable:no-drag;flex:1;min-height:0;display:flex;flex-direction:column;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;flex-shrink:0;">更新内容</div>
+        <div id="update-changelog" style="font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;overflow-y:auto;flex:1;min-height:0;">-</div>
       </div>
-      <div id="update-progress-container" style="display:none;margin-bottom:24px;--wails-draggable:no-drag;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">下载进度</div>
-        <div class="progress-bg"><div id="update-progress-bar" class="progress-bar"></div></div>
-        <div id="update-progress-text" style="font-size:11px;color:var(--text-secondary);margin-top:6px;text-align:center;">0%</div>
-      </div>
-      <div class="btn-row" style="--wails-draggable:no-drag;">
-        <button onclick="closeUpdateModal()" id="btn-update-later" class="btn btn-secondary" style="flex:1;justify-content:center;">稍后更新</button>
-        <button onclick="downloadUpdate()" id="btn-update-now" class="btn btn-dark" style="flex:1;justify-content:center;">立即更新</button>
+      <div class="btn-row" style="--wails-draggable:no-drag;flex-shrink:0;">
+        <button onclick="closeUpdateModal()" id="btn-update-later" class="btn btn-secondary" style="flex:1;justify-content:center;">稍后</button>
+        <button onclick="openReleasePage()" id="btn-update-now" class="btn btn-dark" style="flex:1;justify-content:center;">前往下载</button>
       </div>
     </div>
   </div>
@@ -169,6 +164,12 @@
       <div class="nav-dot"></div>
       <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       <span class="nav-tooltip">邮箱池</span>
+    </div>
+    <!-- 订阅 -->
+    <div class="nav-item" onclick="switchPage('subscription')" data-page="subscription">
+      <div class="nav-dot"></div>
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg>
+      <span class="nav-tooltip">订阅</span>
     </div>
   </div>
 
@@ -295,7 +296,7 @@
               <img src="assets/appicon.png" style="width:56px;height:56px;display:block;">
             </div>
             <div>
-              <div style="font-size:17px;font-weight:800;color:var(--text);">Kiro 注册机</div>
+              <div style="font-size:17px;font-weight:800;color:var(--text);">KiroX</div>
               <div style="font-size:12px;color:var(--text-muted);margin-top:3px;font-family:var(--font-mono);" id="info-version-detail">-</div>
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-left:auto;">
@@ -392,11 +393,11 @@
             <div class="settings-item">
               <div class="settings-item-main">
                 <div class="settings-item-title">存储目录</div>
-                <div class="settings-item-desc">Outlook 账号池等内部数据的加密存储位置</div>
+                <div class="settings-item-desc">Outlook 账号池等内部数据的本地存储位置</div>
               </div>
               <div class="settings-item-action">
                 <div style="display:flex;gap:8px;width:100%;">
-                  <input type="text" id="cfg-data-dir" placeholder="默认加密存储" class="form-input" readonly style="flex:1;">
+                  <input type="text" id="cfg-data-dir" placeholder="默认存储路径" class="form-input" readonly style="flex:1;">
                   <button onclick="selectDataDir()" class="btn btn-secondary btn-sm">选择</button>
                   <button onclick="resetDataDir()" class="btn btn-secondary btn-sm">重置</button>
                 </div>
@@ -423,10 +424,13 @@
                 <div class="settings-item-desc">所有注册请求走该代理；留空=直连。支持 http/https/socks5 完整 URL，也支持 host:port:user:pass、host:port、user:pass@host:port 等简写。</div>
               </div>
               <div class="settings-item-action">
-                <div style="display:flex;gap:8px;width:100%;">
-                  <input type="text" id="cfg-proxy" placeholder="例如 http://user:pass@127.0.0.1:7890" class="form-input" style="flex:1;">
-                  <button onclick="saveProxy()" class="btn btn-secondary btn-sm">保存</button>
-                  <button onclick="resetProxy()" class="btn btn-secondary btn-sm">清除</button>
+                <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+                  <div style="display:flex;gap:8px;">
+                    <input type="text" id="cfg-proxy" placeholder="例如 http://user:pass@127.0.0.1:7890" class="form-input" style="flex:1;">
+                    <button onclick="saveProxy()" class="btn btn-secondary btn-sm">保存</button>
+                    <button onclick="resetProxy()" class="btn btn-secondary btn-sm">清除</button>
+                  </div>
+                  <div id="proxy-detect-card" style="display:none;"></div>
                 </div>
               </div>
             </div>
@@ -482,6 +486,90 @@
       <iframe src="https://pay.ldxp.cn/shop/8UCMT1TR" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms" style="width:100%;height:calc(100% + 160px);border:none;border-radius:12px;position:relative;top:-108px;overflow:hidden;"></iframe>
     </div>
 
+    <!-- ===== Page: 订阅 ===== -->
+    <div class="page" id="page-subscription">
+      <div class="page-scroll" style="padding:28px 32px 40px;max-width:1100px;margin:0 auto;">
+
+        <div class="card" style="margin-bottom:20px;">
+          <div class="settings-group">
+            <div class="settings-group-title">
+              账号列表
+              <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;" id="sub-output-dir">已自动加载输出文件夹中的账号</span>
+            </div>
+
+            <!-- 操作工具栏 -->
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--border);">
+              <button onclick="openSubscriptionPlanModal()" id="sub-batch-btn" class="btn btn-dark btn-sm">一键获取选中</button>
+              <button onclick="copyAllSubscriptionLinks()" class="btn btn-secondary btn-sm">复制选中链接</button>
+              <button onclick="reloadSubscriptionAccounts()" class="btn btn-secondary btn-sm">重新加载账号</button>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto;">
+                <span>并发</span>
+                <input type="number" id="sub-concurrency" min="1" max="20" value="3" class="form-input" style="width:60px;text-align:center;height:28px;padding:2px;">
+              </div>
+              <span id="sub-progress" style="font-size:12px;color:var(--muted);">未开始</span>
+            </div>
+
+            <!-- 表格 -->
+            <div style="overflow-x:auto;">
+              <table id="sub-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="text-align:left;color:var(--muted);font-size:12px;">
+                    <th style="padding:8px 12px;width:36px;">
+                      <input type="checkbox" id="sub-select-all" onchange="toggleSubSelectAll(this.checked)">
+                    </th>
+                    <th style="padding:8px 8px;width:36px;">#</th>
+                    <th style="padding:8px 8px;">邮箱</th>
+                    <th style="padding:8px 8px;width:120px;">订阅</th>
+                    <th style="padding:8px 8px;width:90px;">状态</th>
+                    <th style="padding:8px 12px;width:180px;text-align:right;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="sub-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== 订阅计划选择模态框 ===== -->
+    <div id="sub-plan-modal" class="modal-overlay">
+      <div class="modal-content" style="max-width:560px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:700;">选择订阅计划</h3>
+          <button onclick="closeSubscriptionPlanModal()" style="background:none;border:none;color:var(--text-muted);font-size:28px;cursor:pointer;line-height:1;">&times;</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" id="sub-plan-modal-hint">将使用账号 — 加载中…</div>
+        <div id="sub-plan-modal-list" style="display:flex;flex-direction:column;gap:8px;min-height:80px;max-height:50vh;overflow-y:auto;margin-bottom:20px;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:30px 0;color:var(--text-muted);font-size:12px;">
+            <div style="width:28px;height:28px;border:3px solid var(--border);border-top-color:#3b82f6;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            <span>加载中…</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="closeSubscriptionPlanModal()" class="btn btn-secondary">取消</button>
+          <button onclick="confirmStartBatchFetch()" id="sub-plan-modal-confirm" class="btn btn-dark" disabled>开始获取</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 订阅获取失败详情模态框 ===== -->
+    <div id="sub-error-modal" class="modal-overlay">
+      <div class="modal-content" style="max-width:640px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:16px;font-weight:700;color:#ef4444;">获取失败 · 上游响应</h3>
+          <button onclick="closeSubErrorModal()" style="background:none;border:none;color:var(--text-muted);font-size:28px;cursor:pointer;line-height:1;">&times;</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">账号：<span id="sub-error-modal-email" style="color:var(--text);font-weight:600;"></span></div>
+        <pre id="sub-error-modal-body" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--font-mono);font-size:12px;line-height:1.5;max-height:50vh;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:0 0 16px;"></pre>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="copySubErrorDetail()" class="btn btn-secondary">复制</button>
+          <button onclick="closeSubErrorModal()" class="btn btn-dark">关闭</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== Page: 注册 ===== -->
     <div class="page" id="page-register">
       <div class="page-scroll" style="max-width:800px;margin:0 auto;">
@@ -522,9 +610,13 @@
               <label style="display:flex;align-items:center;justify-content:center;padding:10px;border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all 0.2s;" onclick="selectEmailProvider('moemail')">
                 <input type="radio" name="email-provider" value="moemail" style="display:none;">
                 <div id="provider-moemail" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10b981;">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
+                  <svg viewBox="0 0 32 32" width="20" height="20" fill="none" style="color:#8b5cf6;">
+                    <path d="M4 8h24v16H4V8z" fill="currentColor" opacity="0.2"/>
+                    <path d="M4 8h24v2H4V8zM4 22h24v2H4v-2z" fill="currentColor"/>
+                    <path d="M14 12h4v4h-4v-4zM12 14h2v4h-2v-4zM18 14h2v4h-2v-4zM14 18h4v2h-4v-2z" fill="currentColor"/>
+                    <path d="M4 8l12 8 12-8" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M8 18h2v2H8v-2zM22 18h2v2h-2v-2z" fill="currentColor" opacity="0.6"/>
+                    <path d="M8 14h2v2H8v-2zM22 14h2v2h-2v-2z" fill="currentColor" opacity="0.4"/>
                   </svg>
                   <span>MoeMail</span>
                 </div>
@@ -551,7 +643,7 @@
             <div class="form-group" style="margin-bottom:0;">
               <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10b981;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#8b5cf6;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
                   <span>选择域名</span>
                 </div>
                 <button type="button" onclick="selectAllMoeMailDomains()" class="moemail-select-all-btn">全选域名</button>
@@ -608,9 +700,13 @@
           <div class="settings-group">
             <div class="settings-group-title" style="display:flex;align-items:center;justify-content:space-between;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#10b981;">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
+                <svg viewBox="0 0 32 32" width="18" height="18" fill="none" style="color:#8b5cf6;">
+                  <path d="M4 8h24v16H4V8z" fill="currentColor" opacity="0.2"/>
+                  <path d="M4 8h24v2H4V8zM4 22h24v2H4v-2z" fill="currentColor"/>
+                  <path d="M14 12h4v4h-4v-4zM12 14h2v4h-2v-4zM18 14h2v4h-2v-4zM14 18h4v2h-4v-2z" fill="currentColor"/>
+                  <path d="M4 8l12 8 12-8" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <path d="M8 18h2v2H8v-2zM22 18h2v2h-2v-2z" fill="currentColor" opacity="0.6"/>
+                  <path d="M8 14h2v2H8v-2zM22 14h2v2h-2v-2z" fill="currentColor" opacity="0.4"/>
                 </svg>
                 <span>MoeMail 临时邮箱</span>
               </div>
@@ -788,9 +884,10 @@
 
         <!-- 账号列表 -->
         <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:420px;">
-          <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <span style="font-size:14px;font-weight:700;color:var(--text);">微软邮箱池</span>
+          <div class="settings-group-title" style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img src="assets/outlook.png" style="width:18px;height:18px;border-radius:4px;">
+              <span>微软邮箱</span>
               <span style="font-size:12px;font-weight:600;color:var(--text-muted);padding:3px 8px;background:var(--bg-subtle);border-radius:6px;">共 <span id="outlook-count">0</span> 个</span>
             </div>
             <div style="display:flex;gap:8px;">
@@ -798,6 +895,7 @@
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                 添加账号
               </button>
+              <button onclick="clearRegisteredOutlookAccounts()" class="btn btn-secondary btn-sm">清除已注册</button>
               <button onclick="clearAllOutlookAccounts()" class="btn btn-danger btn-sm">清空全部</button>
             </div>
           </div>
@@ -932,6 +1030,7 @@
 <script src="js/providers.js"></script>
 <script src="js/task.js"></script>
 <script src="js/overview.js"></script>
+<script src="js/subscription.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/app.js"></script>
 </body>

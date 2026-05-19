@@ -1,7 +1,7 @@
 // ===== 核心：导航 / 标签页 / 下拉框 / 配置 / 卡密 / Toast / 窗口控制 =====
 
 // 页面切换
-var pageTitles = { overview: '概览', logs: '运行日志', register: '注册', accounts: '邮箱池', info: '关于', settings: '设置' };
+var pageTitles = { overview: '概览', logs: '运行日志', register: '注册', accounts: '邮箱池', subscription: '获取订阅支付链接', info: '关于', settings: '设置' };
 function switchPage(pageId) {
   document.querySelectorAll('.page, .page-placeholder, .page-iframe').forEach(function(p) {
     p.classList.remove('active');
@@ -17,8 +17,17 @@ function switchPage(pageId) {
   } else {
     stopOverviewTimer();
   }
+  if (pageId === 'accounts') {
+    loadOutlookAccountsList();
+    startOutlookAutoRefresh();
+  } else {
+    stopOutlookAutoRefresh();
+  }
   if (pageId === 'info') {
     loadInfoVersion();
+  }
+  if (pageId === 'subscription') {
+    reloadSubscriptionAccounts();
   }
 }
 
@@ -189,23 +198,60 @@ async function loadProxy() {
   } catch(e) {}
 }
 
+function renderProxyDetectCard(state, payload) {
+  var box = document.getElementById('proxy-detect-card');
+  if (!box) return;
+  if (state === 'hidden') { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'block';
+  var base = 'border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;';
+  if (state === 'loading') {
+    box.style.cssText = base + 'background:var(--card-bg, transparent);color:var(--muted);';
+    box.innerHTML = '正在检测代理出口…';
+    return;
+  }
+  if (state === 'ok') {
+    var loc = [payload.country, payload.region, payload.city].filter(Boolean).join(' · ');
+    box.style.cssText = base + 'background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.35);';
+    box.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+        '<span style="font-weight:600;color:#10b981;">✓ 可用</span>' +
+        '<span style="padding:1px 6px;border-radius:4px;background:rgba(16,185,129,0.15);color:#10b981;font-size:11px;font-weight:600;">' + (payload.scheme || '').toUpperCase() + '</span>' +
+        '<span style="color:var(--text);font-weight:600;">' + (payload.ip || '') + '</span>' +
+        (loc ? '<span style="color:var(--muted);">· ' + loc + '</span>' : '') +
+      '</div>' +
+      (payload.isp ? '<div style="margin-top:4px;color:var(--muted);font-size:11px;">' + payload.isp + '</div>' : '');
+    return;
+  }
+  // error
+  box.style.cssText = base + 'background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.35);color:#ef4444;';
+  box.innerHTML = '✗ 检测失败：' + (payload && payload.error ? payload.error : '未知错误');
+}
+
 async function saveProxy() {
   var el = document.getElementById('cfg-proxy');
   if (!el) return;
   try {
+    if (el.value.trim()) renderProxyDetectCard('loading');
+    else renderProxyDetectCard('hidden');
     var result = await window.go.main.App.SetProxy(el.value.trim());
     if (result.error) {
       showToast(result.error, 'error');
+      renderProxyDetectCard('hidden');
       return;
     }
     el.value = result.proxy || '';
-    if (result.proxy) {
-      showToast('代理已保存');
-    } else {
+    if (!result.proxy) {
+      renderProxyDetectCard('hidden');
       showToast('已清空代理（直连）');
+      return;
     }
+    showToast('代理已保存');
+    var d = result.detect;
+    if (d && d.ok) renderProxyDetectCard('ok', d);
+    else renderProxyDetectCard('error', d || {});
   } catch(e) {
     showToast('保存失败: ' + e.message, 'error');
+    renderProxyDetectCard('error', { error: e.message });
   }
 }
 
@@ -214,6 +260,7 @@ async function resetProxy() {
     await window.go.main.App.ResetProxy();
     var el = document.getElementById('cfg-proxy');
     if (el) el.value = '';
+    renderProxyDetectCard('hidden');
     showToast('已清空代理（直连）');
   } catch(e) {
     showToast('清空失败: ' + e.message, 'error');

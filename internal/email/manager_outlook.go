@@ -123,6 +123,25 @@ func ClearOutlookAccounts() map[string]interface{} {
 	return map[string]interface{}{"status": "cleared"}
 }
 
+// ClearRegisteredOutlookAccounts 仅清除已标记为已注册的账号（成功/失败均算）
+func ClearRegisteredOutlookAccounts() map[string]interface{} {
+	removed := 0
+	newLen := 0
+	storage.ModifyAccountsCached(func(accounts []map[string]interface{}) []map[string]interface{} {
+		out := make([]map[string]interface{}, 0, len(accounts))
+		for _, acc := range accounts {
+			if reg, _ := acc["registered"].(bool); reg {
+				removed++
+				continue
+			}
+			out = append(out, acc)
+		}
+		newLen = len(out)
+		return out
+	})
+	return map[string]interface{}{"status": "ok", "removed": removed, "total": newLen}
+}
+
 // ImportOutlookFile 导入 Outlook 账号文件
 func ImportOutlookFile(filePath string) map[string]interface{} {
 	if filePath == "" {

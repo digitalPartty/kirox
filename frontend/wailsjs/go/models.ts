@@ -73,6 +73,37 @@ export namespace email {
 
 }
 
+export namespace proxy {
+	
+	export class Info {
+	    ok: boolean;
+	    scheme: string;
+	    ip: string;
+	    country: string;
+	    region: string;
+	    city: string;
+	    isp: string;
+	    error?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Info(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ok = source["ok"];
+	        this.scheme = source["scheme"];
+	        this.ip = source["ip"];
+	        this.country = source["country"];
+	        this.region = source["region"];
+	        this.city = source["city"];
+	        this.isp = source["isp"];
+	        this.error = source["error"];
+	    }
+	}
+
+}
+
 export namespace task {
 	
 	export class StartTaskRequest {

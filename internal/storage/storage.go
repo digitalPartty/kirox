@@ -163,9 +163,12 @@ func ResetDataDirPath() string {
 	return defaultDir
 }
 
-// getDefaultResultOutputDir 默认输出目录：应用可执行文件所在目录下的 output 文件夹。
-// 若无法解析可执行文件路径，回落到当前工作目录下的 output。
+// getDefaultResultOutputDir 默认输出目录：用户文档目录下的 Kirox 文件夹。
+// 若无法解析用户主目录，回落到可执行文件所在目录下的 output。
 func getDefaultResultOutputDir() string {
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, "Documents", "Kirox")
+	}
 	base := "."
 	if exe, err := os.Executable(); err == nil {
 		if resolved, err := filepath.EvalSymlinks(exe); err == nil {
@@ -178,7 +181,7 @@ func getDefaultResultOutputDir() string {
 	return filepath.Join(base, "output")
 }
 
-// GetResultOutputDir 获取注册结果输出目录（默认为应用可执行文件所在目录）
+// GetResultOutputDir 获取注册结果输出目录（默认为用户文档目录下的 Kirox）
 func GetResultOutputDir() string {
 	_resultOutputOnce.Do(func() {
 		m := loadConfigMap()
@@ -211,7 +214,7 @@ func SetResultOutputDir(dir string) (string, error) {
 	return dir, nil
 }
 
-// ResetResultOutputDir 重置为默认输出目录（应用可执行文件所在目录）
+// ResetResultOutputDir 重置为默认输出目录（用户文档目录下的 Kirox）
 func ResetResultOutputDir() string {
 	m := loadConfigMap()
 	delete(m, keyResultOutputDir)
@@ -414,7 +417,7 @@ func FlushAccountsSync() {
 	flushAccountsToDisk()
 }
 
-// ===== 加密存储读写 =====
+// ===== JSON 存储读写 =====
 
 var fileMutexes sync.Map
 

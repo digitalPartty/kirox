@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="frontend/assets/appicon.svg" width="100" height="100" alt="Kiro 注册机">
+  <img src="frontend/assets/appicon.svg" width="100" height="100" alt="KiroX">
 </p>
 
-<h1 align="center">Kiro 协议注册机</h1>
+<h1 align="center">KiroX</h1>
 
 <p align="center">
   AWS Builder ID (Kiro) 批量自动注册工具
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.0.1-6366f1?style=flat-square" alt="version">
+  <img src="https://img.shields.io/badge/version-v1.0.2-6366f1?style=flat-square" alt="version">
   <img src="https://img.shields.io/badge/platform-Windows-0078d4?style=flat-square" alt="platform">
   <img src="https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go" alt="go">
   <img src="https://img.shields.io/badge/Wails-v2-red?style=flat-square" alt="wails">
@@ -20,23 +20,9 @@
 
 ---
 
-## 关于本项目
-
-> **本项目前身为商用版本，是 Kiro 协议注册的原创实现。**
-
-目前市面上流传的同类工具，大多基于以下途径：
-- 逆向/破解客户端二进制，提取硬编码参数
-- 还原自我们早期收费版本的泄露代码
-
-本项目从协议层面独立实现，完整还原了 AWS Builder ID 的 OIDC 注册、设备授权、SSO 及 Kiro Token 交换全流程。感兴趣的朋友可以对比各工具的核心代码实现来自行判断。
-
-如果你认可我们的技术，欢迎点一个 ⭐ Star 作为鼓励，这是对我们最大的支持。
-
----
-
 ## 简介
 
-Kiro 注册机是一款基于 [Wails v2](https://wails.io) 构建的桌面应用，用于自动化完成 AWS Builder ID 账号的批量注册流程。支持 Outlook 邮箱池和 MoeMail 临时邮箱两种邮件来源，内置浏览器指纹模拟、并发控制、代理支持和自动更新。
+KiroX 是一款基于 [Wails v2](https://wails.io) 构建的桌面应用，用于自动化完成 AWS Builder ID 账号的批量注册流程。支持 Outlook 邮箱池和 MoeMail 临时邮箱两种邮件来源，内置浏览器指纹模拟、并发控制、代理支持和自动更新。
 
 ---
 
@@ -59,7 +45,7 @@ Kiro 注册机是一款基于 [Wails v2](https://wails.io) 构建的桌面应用
 
 **数据管理**
 - 注册成功的账号以明文 JSON 写入可配置的输出目录
-- Outlook 账号信息加密存储
+- Outlook 账号信息以 JSON 形式本地存储
 - 支持自定义数据目录和结果输出目录
 
 **代理**
@@ -160,7 +146,7 @@ host:port:user:pass
 ## 项目结构
 
 ```
-kiro注册机/
+kirox/
 ├── main.go                    # 入口，Wails 初始化
 ├── app.go                     # App 结构体，Wails 绑定方法
 ├── internal/
@@ -178,12 +164,14 @@ kiro注册机/
 │   ├── crypto/                # JWE 加密、XXTEA
 │   ├── storage/               # 账号存储、配置持久化
 │   ├── task/                  # 批量任务调度、并发控制
-│   ├── data/                  # 注册结果写入
+│   ├── data/                  # 注册结果读写
+│   ├── proxy/                 # 代理出口 IP / 归属检测
+│   ├── subscription/          # 订阅链接：刷 Token + listAvailableSubscriptions / CreateSubscriptionToken / setUserPreference
 │   ├── updater/               # 自动更新
 │   └── http/                  # TLS 客户端工具
 └── frontend/
     ├── index.html             # 单页应用入口
-    ├── js/                    # 各页面逻辑模块
+    ├── js/                    # 页面逻辑（overview / accounts / moemail / task / subscription / app / ui）
     ├── css/                   # 样式（layout / components / style）
     └── build.js               # 前端构建脚本
 ```
@@ -208,6 +196,42 @@ kiro注册机/
 - 建议配合代理使用，避免 IP 被限速
 - Outlook 账号需提前准备好有效的 RefreshToken
 - 并发数过高可能触发 AWS 风控，建议从低并发开始测试
+
+---
+
+## 常见问题
+
+### IP 纯净度相关
+
+如果运行中出现下面这两类报错，多半是当前出口 IP 不够纯净（代理 IP 已被 AWS / Microsoft 风控）。
+
+**情况一：发送邮箱验证码响应 OTP 400**
+
+![情况一](docs/images/1.png)
+![情况一](docs/images/3.png)
+
+建议更换更干净的住宅代理。
+
+> 如果使用的是自建邮箱或一次性邮箱（MoeMail 等），OTP 400 也可能是邮箱域名已被 Microsoft / AWS 拉黑导致；可换一个域名再试。
+
+**情况二：注册流程直接卡住或邮箱无法访问**
+
+![情况二](docs/images/2.png)
+
+此时先用本机浏览器（带相同代理）尝试打开 [outlook.live.com](https://outlook.live.com)：
+
+- 如果浏览器都打不开 / 跳验证码 → 当前 IP 已被 Microsoft 风控，需要换代理
+- 如果浏览器能正常访问 → 检查 Outlook 账号的 RefreshToken 是否仍然有效
+
+### macOS 提示「应用已损坏，无法打开」
+
+未签名的应用首次运行时会被 macOS Gatekeeper 拦截。在终端执行下面的命令移除下载隔离标记即可正常打开：
+
+```bash
+xattr -cr /path/to/KiroX.app
+```
+
+将 `/path/to/KiroX.app` 替换成实际路径（例如把 `KiroX.app` 拖入终端可自动填入）。
 
 ---
 
@@ -238,3 +262,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+---
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=huey1in/kirox&type=Date)](https://star-history.com/#huey1in/kirox&Date)

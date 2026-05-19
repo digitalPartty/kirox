@@ -15,6 +15,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"reg_go/internal/storage"
 )
 
 // OutlookAccount Outlook 邮箱账号
@@ -110,7 +112,7 @@ func ParseOutlookLines(data string) []OutlookAccount {
 	return accounts
 }
 
-// RefreshOutlookToken 用 refresh_token 获取 access_token
+// RefreshOutlookToken 用 refresh_token 获取 access_token（优先走全局代理，失败时降级直连）
 func RefreshOutlookToken(acc OutlookAccount) (string, error) {
 	form := url.Values{
 		"client_id":     {acc.ClientID},
@@ -119,11 +121,20 @@ func RefreshOutlookToken(acc OutlookAccount) (string, error) {
 		"scope":         {"https://outlook.office.com/IMAP.AccessAsUser.All offline_access"},
 	}
 
-	resp, err := http.Post(
-		"https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
-		"application/x-www-form-urlencoded",
-		strings.NewReader(form.Encode()),
-	)
+	proxyURL := storage.GetProxy()
+	tryPost := func(p string) (resp *http.Response, err error) {
+		client := httpClientWithProxy(p, 30*time.Second)
+		return client.Post(
+			"https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+			"application/x-www-form-urlencoded",
+			strings.NewReader(form.Encode()),
+		)
+	}
+	resp, err := tryPost(proxyURL)
+	if err != nil && proxyURL != "" {
+		log.Printf("[Outlook OAuth] 代理请求失败，降级直连：%v", err)
+		resp, err = tryPost("")
+	}
 	if err != nil {
 		return "", fmt.Errorf("请求失败: %v", err)
 	}
@@ -156,15 +167,27 @@ type imapClient struct {
 	tag    int
 }
 
-// newIMAPClient 连接 Outlook IMAP
+// newIMAPClient 连接 Outlook IMAP（优先走全局代理，代理被封端口时自动降级直连）
 func newIMAPClient() (*imapClient, error) {
-	tlsConfig := &tls.Config{ServerName: "outlook.office365.com"}
-	conn, err := tls.DialWithDialer(
-		&net.Dialer{Timeout: 15 * time.Second},
-		"tcp", "outlook.office365.com:993", tlsConfig,
-	)
+	const target = "outlook.office365.com:993"
+	proxyURL := storage.GetProxy()
+	rawConn, err := dialThroughProxy(proxyURL, "tcp", target, 15*time.Second)
+	if err != nil && proxyURL != "" {
+		log.Printf("[IMAP] 代理拨号失败，降级直连：%v", err)
+		rawConn, err = dialThroughProxy("", "tcp", target, 15*time.Second)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("连接失败: %v", err)
+	}
+	tlsConfig := &tls.Config{ServerName: "outlook.office365.com"}
+	conn := tls.Client(rawConn, tlsConfig)
+	if err := conn.SetDeadline(time.Now().Add(15 * time.Second)); err == nil {
+		err = conn.Handshake()
+		conn.SetDeadline(time.Time{})
+		if err != nil {
+			conn.Close()
+			return nil, fmt.Errorf("TLS 握手失败: %v", err)
+		}
 	}
 
 	c := &imapClient{conn: conn, reader: bufio.NewReader(conn), tag: 0}
