@@ -37,13 +37,17 @@ type directMailResponse struct {
 }
 
 func NewDirectMailClient(cfg DirectMailConfig) *DirectMailClient {
+	return newDirectMailClientWithProxy(cfg, "")
+}
+
+func newDirectMailClientWithProxy(cfg DirectMailConfig, proxy string) *DirectMailClient {
 	cfg.BaseURL = strings.TrimRight(cfg.BaseURL, "/")
 	if cfg.Mailbox == "" {
 		cfg.Mailbox = "INBOX"
 	}
 	return &DirectMailClient{
 		cfg:    cfg,
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: httpClientWithProxy(proxy, 15*time.Second),
 	}
 }
 

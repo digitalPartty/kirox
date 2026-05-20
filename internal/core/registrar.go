@@ -298,7 +298,7 @@ func (r *Registrar) Step3Email() error {
 
 	if r.Cfg.DuckToken != "" && r.Cfg.TEmailConfig != nil {
 		log.Println("[3] 创建 DuckDuckGo 别名 (TEmail 取码)")
-		r.EmailSvc = email.NewDuckTEmailService(r.Cfg.DuckToken, *r.Cfg.TEmailConfig)
+		r.EmailSvc = email.NewDuckTEmailService(r.Cfg.DuckToken, *r.Cfg.TEmailConfig, r.Cfg.Proxy)
 		r.Email = r.EmailSvc.Create()
 		if r.Email == "" {
 			return fmt.Errorf("DuckDuckGo 别名创建失败")
@@ -309,7 +309,7 @@ func (r *Registrar) Step3Email() error {
 
 	if r.Cfg.DirectMail != nil {
 		log.Println("[3] 使用 DirectMail 邮箱")
-		r.EmailSvc = email.NewDirectMailService(*r.Cfg.DirectMail)
+		r.EmailSvc = email.NewDirectMailService(*r.Cfg.DirectMail, r.Cfg.Proxy)
 		r.Email = r.EmailSvc.Create()
 		log.Printf("email=%s", r.Email)
 		return nil

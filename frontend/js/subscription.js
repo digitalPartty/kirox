@@ -41,6 +41,7 @@ async function reloadSubscriptionAccounts() {
     var hasCached = !!a.cachedUrl;
     return {
       email: a.email || '',
+      password: a.password || '',
       subscription: a.subscription || '',
       time: a.time || '',
       status: hasCached ? 'success' : 'idle',
@@ -89,8 +90,6 @@ function renderSubTable() {
     var btnStyle = 'background:transparent;border:1px solid var(--border);border-radius:6px;padding:4px 6px;cursor:pointer;color:var(--text);display:inline-flex;align-items:center;justify-content:center;';
     var iconOpen = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
     var iconCopy = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    var iconFetch = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>';
-    var iconRefetch = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
 
     var actions = '';
     if (a.status === 'success' && a.url) {
@@ -102,11 +101,16 @@ function renderSubTable() {
     actions +=
       '<button class="btn btn-dark btn-sm" onclick="fetchOneSubLink(' + idx + ')"' + (a.status === 'loading' ? ' disabled' : '') + '>' + (isRefetch ? '重新获取' : '获取') + '</button>';
 
+    var pwdHtml = a.password
+      ? '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);" title="' + escapeHtml(a.password) + '">' + escapeHtml(a.password) + '</span>'
+      : '<span style="color:var(--text-muted);font-size:11px;">-</span>';
+
     return (
       '<tr style="border-top:1px solid var(--border);">' +
         '<td style="padding:8px 12px;"><input type="checkbox" data-sub-idx="' + idx + '" ' + (a.selected ? 'checked' : '') + ' onchange="toggleSubRow(' + idx + ', this.checked)"></td>' +
         '<td style="padding:8px;color:var(--muted);font-size:12px;">' + (idx + 1) + '</td>' +
         '<td style="padding:8px;">' + escapeHtml(a.email) + '</td>' +
+        '<td style="padding:8px;">' + pwdHtml + '</td>' +
         '<td style="padding:8px;font-size:12px;color:var(--muted);">' + escapeHtml(a.subscription) + '</td>' +
         '<td style="padding:8px;font-size:12px;">' + statusHtml + '</td>' +
         '<td style="padding:8px 12px;text-align:right;display:flex;gap:4px;justify-content:flex-end;">' + actions + '</td>' +

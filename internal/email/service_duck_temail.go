@@ -9,26 +9,28 @@ import (
 type duckTEmailAdapter struct {
 	duckToken   string
 	temailCfg   TEmailConfig
+	proxy       string
 	address     string
 	startMailID int64
 }
 
-func NewDuckTEmailService(duckToken string, temailCfg TEmailConfig) TempEmailService {
+func NewDuckTEmailService(duckToken string, temailCfg TEmailConfig, proxy string) TempEmailService {
 	return &duckTEmailAdapter{
 		duckToken: duckToken,
 		temailCfg: temailCfg,
+		proxy:     proxy,
 	}
 }
 
 func (a *duckTEmailAdapter) Create() string {
-	tc := NewTEmailClient(a.temailCfg)
+	tc := newTEmailClientWithProxy(a.temailCfg, a.proxy)
 	latestID, err := tc.GetLatestMailID()
 	if err != nil {
 		log.Printf("[DuckTEmail] 获取 TEmail 最新邮件 ID 失败: %v, 使用 0", err)
 	}
 	a.startMailID = latestID
 
-	duck := NewDuckDuckGoClient(a.duckToken)
+	duck := newDuckDuckGoClientWithProxy(a.duckToken, a.proxy)
 	addr, err := duck.CreateAlias()
 	if err != nil {
 		log.Printf("[DuckTEmail] 创建 DuckDuckGo 别名失败: %v", err)
@@ -43,7 +45,7 @@ func (a *duckTEmailAdapter) WaitForCode(timeoutSec, intervalSec int) (string, er
 	if a.address == "" {
 		return "", fmt.Errorf("未创建邮箱别名")
 	}
-	tc := NewTEmailClient(a.temailCfg)
+	tc := newTEmailClientWithProxy(a.temailCfg, a.proxy)
 	return tc.WaitForCode(a.startMailID, timeoutSec, intervalSec)
 }
 
@@ -54,15 +56,16 @@ func (a *duckTEmailAdapter) GetAddress() string {
 // directMailAdapter 将 DirectMailClient 包装为 TempEmailService
 type directMailAdapter struct {
 	cfg    DirectMailConfig
+	proxy  string
 	client *DirectMailClient
 }
 
-func NewDirectMailService(cfg DirectMailConfig) TempEmailService {
-	return &directMailAdapter{cfg: cfg}
+func NewDirectMailService(cfg DirectMailConfig, proxy string) TempEmailService {
+	return &directMailAdapter{cfg: cfg, proxy: proxy}
 }
 
 func (a *directMailAdapter) Create() string {
-	a.client = NewDirectMailClient(a.cfg)
+	a.client = newDirectMailClientWithProxy(a.cfg, a.proxy)
 	log.Printf("[DirectMail] 使用邮箱: %s", a.cfg.Email)
 	return a.cfg.Email
 }

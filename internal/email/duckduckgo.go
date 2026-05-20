@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"reg_go/internal/storage"
 )
 
 type DuckDuckGoConfig struct {
@@ -19,9 +21,13 @@ type DuckDuckGoClient struct {
 }
 
 func NewDuckDuckGoClient(token string) *DuckDuckGoClient {
+	return newDuckDuckGoClientWithProxy(token, storage.GetProxy())
+}
+
+func newDuckDuckGoClientWithProxy(token, proxy string) *DuckDuckGoClient {
 	return &DuckDuckGoClient{
 		token:  strings.TrimSpace(token),
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: httpClientWithProxy(proxy, 20*time.Second),
 	}
 }
 

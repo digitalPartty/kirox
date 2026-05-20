@@ -1,6 +1,7 @@
 package email
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,10 +32,14 @@ type temailMail struct {
 }
 
 func NewTEmailClient(cfg TEmailConfig) *TEmailClient {
+	return newTEmailClientWithProxy(cfg, "")
+}
+
+func newTEmailClientWithProxy(cfg TEmailConfig, proxy string) *TEmailClient {
 	cfg.BaseURL = strings.TrimRight(cfg.BaseURL, "/")
 	return &TEmailClient{
 		cfg:    cfg,
-		client: &http.Client{Timeout: 15 * time.Second},
+		client: httpClientWithProxy(proxy, 15*time.Second),
 	}
 }
 
@@ -254,25 +259,78 @@ func (c *TEmailClient) WaitForCode(startMailID int64, timeoutSec, intervalSec in
 }
 
 var (
-	reAWSCode      = regexp.MustCompile(`(?i)Verification code::\s*(\d{6})`)
-	reAWSCodeCN    = regexp.MustCompile(`验证码[：:][：:]\s*(\d{6})`)
-	reCommonCode   = regexp.MustCompile(`(?i)Verification code:\s*(\d{6})`)
-	reCodeIs       = regexp.MustCompile(`(?i)code\s+is\s+(\d{6})`)
-	reChineseCode  = regexp.MustCompile(`验证码[：:]\s*(\d{6})`)
-	reGenericCode  = regexp.MustCompile(`(?:^|[^\d])(\d{6})(?:[^\d]|$)`)
+	reAWSCode     = regexp.MustCompile(`(?i)Verification code::\s*(\d{6})`)
+	reAWSCodeCN   = regexp.MustCompile(`验证码[：:][：:]\s*(\d{6})`)
+	reCommonCode  = regexp.MustCompile(`(?i)Verification code:\s*(\d{6})`)
+	reCodeIs      = regexp.MustCompile(`(?i)code\s+is\s+(\d{6})`)
+	reChineseCode = regexp.MustCompile(`验证码[：:]\s*(\d{6})`)
+	// 排除 # 前缀，避免匹配 CSS 颜色值如 #000000
+	reGenericCode  = regexp.MustCompile(`(?:^|[^\d#])(\d{6})(?:[^\d]|$)`)
+	reHTMLTag      = regexp.MustCompile(`<[^>]+>`)
+	reBase64Block  = regexp.MustCompile(`(?i)Content-Transfer-Encoding:\s*base64\r?\n\r?\n((?:[A-Za-z0-9+/=]+\r?\n?)+)`)
 )
+
+func stripHTML(s string) string {
+	return reHTMLTag.ReplaceAllString(s, " ")
+}
+
+// decodeMIMEBase64 解码 MIME 邮件中所有 base64 编码的部分，追加到原始内容后
+func decodeMIMEBase64(raw string) string {
+	var sb strings.Builder
+	sb.WriteString(raw)
+	for _, m := range reBase64Block.FindAllStringSubmatch(raw, -1) {
+		if len(m) < 2 {
+			continue
+		}
+		b64 := strings.NewReplacer("\r\n", "", "\n", "", "\r", "").Replace(m[1])
+		data, err := base64.StdEncoding.DecodeString(b64)
+		if err != nil {
+			data, err = base64.RawStdEncoding.DecodeString(b64)
+		}
+		if err == nil && len(data) > 0 {
+			sb.WriteByte('\n')
+			sb.Write(data)
+		}
+	}
+	return sb.String()
+}
+
+func isAllSameDigit(s string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i] != s[0] {
+			return false
+		}
+	}
+	return true
+}
 
 func ExtractVerificationCode(raw string) string {
 	if raw == "" {
 		return ""
 	}
-	for _, re := range []*regexp.Regexp{reAWSCode, reAWSCodeCN, reCommonCode, reCodeIs, reChineseCode} {
+	specificPatterns := []*regexp.Regexp{reAWSCode, reAWSCodeCN, reCommonCode, reCodeIs, reChineseCode}
+
+	// 先在原始内容上尝试特定模式
+	for _, re := range specificPatterns {
 		if m := re.FindStringSubmatch(raw); len(m) > 1 {
 			return m[1]
 		}
 	}
-	if m := reGenericCode.FindStringSubmatch(raw); len(m) > 1 {
-		return m[1]
+
+	// 解码 base64 MIME 部分后再试
+	expanded := decodeMIMEBase64(raw)
+	for _, re := range specificPatterns {
+		if m := re.FindStringSubmatch(expanded); len(m) > 1 {
+			return m[1]
+		}
+	}
+
+	// 通用回退：去除 HTML 标签，遍历所有 6 位数字，跳过全相同数字（如 000000）
+	plain := stripHTML(expanded)
+	for _, m := range reGenericCode.FindAllStringSubmatch(plain, -1) {
+		if len(m) > 1 && !isAllSameDigit(m[1]) {
+			return m[1]
+		}
 	}
 	return ""
 }
